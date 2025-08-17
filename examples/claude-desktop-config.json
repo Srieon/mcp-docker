@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "dockerhub": {
+      "command": "node",
+      "args": ["/absolute/path/to/dockerhub-mcp-server/dist/index.js"],
+      "env": {
+        "DOCKERHUB_ACCESS_TOKEN": "dckr_pat_your_token_here",
+        "LOG_LEVEL": "info",
+        "CACHE_TTL_SECONDS": "300",
+        "MAX_CACHE_SIZE": "1000"
+      }
+    }
+  }
+}

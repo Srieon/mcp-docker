@@ -1,0 +1,39 @@
+# Docker Compose for Development Environment
+# Usage: docker-compose -f docker-compose.yml -f examples/docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  dockerhub-mcp-server:
+    build:
+      target: development
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src:ro
+      - ./package.json:/app/package.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      # Mount node_modules as volume for better performance
+      - node_modules:/app/node_modules
+    command: ["npm", "run", "dev"]
+
+  # Development database for testing
+  postgres:
+    image: postgres:15-alpine
+    container_name: dev-postgres
+    environment:
+      - POSTGRES_DB=testdb
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    networks:
+      - mcp-network
+
+volumes:
+  node_modules:
+  postgres-dev-data:
