@@ -216,6 +216,14 @@ const [manifest, imageConfig] = await Promise.all([
 ]);
 ```
 
+**Batch Operations** (✅ **Implemented**):
+```typescript
+// Process multiple repositories efficiently
+const batchResults = await Promise.allSettled(
+  batch.map(repository => processRepository(repository, options))
+);
+```
+
 **Response Compression**:
 - Data transformation to reduce memory footprint
 - Selective field extraction from API responses
@@ -326,6 +334,36 @@ const [manifest, imageConfig] = await Promise.all([
    - Base image detection algorithms
    - Optimization recommendation engine
    - Layer categorization by size and type
+
+### 5. Multi-Repository Operations
+
+**Challenge**: Analyzing multiple repositories individually is inefficient and can quickly exhaust rate limits.
+
+**Solutions Implemented**:
+
+1. **Batch Processing Tool**:
+   ```typescript
+   export const batchImageDetailsTool: MCPTool<BatchImageDetailsArgs> = {
+     name: 'docker_batch_image_details',
+     description: 'Efficiently fetch details for multiple repositories in parallel',
+     // Features:
+     // - Controlled concurrency (5 repos at a time)
+     // - Configurable data inclusion (tags, manifests, vulnerabilities)
+     // - Multiple output formats (summary, detailed, comparison)
+     // - Graceful error handling with partial results
+   };
+   ```
+
+2. **Intelligent Concurrency Control**:
+   - Process repositories in batches to respect rate limits
+   - Parallel processing within each batch using `Promise.allSettled`
+   - Graceful degradation when individual repositories fail
+   - Aggregated insights and recommendations across all repositories
+
+3. **Flexible Output Formats**:
+   - **Summary**: Key metrics for quick comparison
+   - **Detailed**: Full information for comprehensive analysis
+   - **Comparison**: Sorted results optimized for decision-making
 
 ---
 

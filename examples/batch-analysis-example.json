@@ -1,0 +1,125 @@
+{
+  "name": "Docker Image Batch Analysis Example",
+  "description": "Example configuration for batch analyzing multiple Docker images",
+  "scenarios": [
+    {
+      "name": "Web Server Comparison",
+      "description": "Compare popular web servers for selection",
+      "tool": "docker_batch_image_details",
+      "arguments": {
+        "repositories": [
+          "library/nginx",
+          "library/apache",
+          "library/caddy",
+          "library/traefik"
+        ],
+        "include_tags": true,
+        "include_manifest": true,
+        "include_vulnerabilities": true,
+        "tag_limit": 3,
+        "format": "comparison"
+      },
+      "expected_insights": [
+        "Security vulnerability comparison",
+        "Image size analysis",
+        "Popularity metrics",
+        "Recent update frequency"
+      ]
+    },
+    {
+      "name": "Node.js Runtime Analysis",
+      "description": "Analyze different Node.js runtime options",
+      "tool": "docker_batch_image_details",
+      "arguments": {
+        "repositories": [
+          "library/node",
+          "library/node:alpine",
+          "library/node:slim",
+          "mhart/alpine-node"
+        ],
+        "include_tags": true,
+        "include_manifest": true,
+        "include_vulnerabilities": true,
+        "tag_limit": 5,
+        "format": "detailed"
+      },
+      "use_case": "Finding the optimal Node.js base image for production deployment"
+    },
+    {
+      "name": "Database Options Survey",
+      "description": "Quick survey of database options",
+      "tool": "docker_batch_image_details",
+      "arguments": {
+        "repositories": [
+          "library/postgres",
+          "library/mysql",
+          "library/mongodb",
+          "library/redis",
+          "library/elasticsearch"
+        ],
+        "include_tags": false,
+        "include_manifest": false,
+        "include_vulnerabilities": true,
+        "format": "summary"
+      },
+      "use_case": "Quick overview for technology selection"
+    },
+    {
+      "name": "Security-Focused Analysis",
+      "description": "Focus on security aspects of critical images",
+      "tool": "docker_batch_image_details",
+      "arguments": {
+        "repositories": [
+          "library/ubuntu",
+          "library/debian",
+          "library/alpine",
+          "library/centos"
+        ],
+        "include_tags": true,
+        "include_manifest": true,
+        "include_vulnerabilities": true,
+        "tag_limit": 2,
+        "format": "detailed"
+      },
+      "focus_areas": [
+        "Vulnerability counts by severity",
+        "Base image security posture",
+        "Update frequency analysis"
+      ]
+    }
+  ],
+  "batch_operation_benefits": [
+    "Single API call for multiple repositories",
+    "Consistent data collection timestamp",
+    "Aggregated insights across repositories",
+    "Efficient rate limit usage",
+    "Comparative analysis capabilities",
+    "Reduced client-server round trips"
+  ],
+  "recommended_usage_patterns": {
+    "technology_selection": {
+      "format": "comparison",
+      "include_vulnerabilities": true,
+      "include_manifest": true,
+      "repositories_limit": "5-10"
+    },
+    "security_audit": {
+      "format": "detailed",
+      "include_vulnerabilities": true,
+      "include_tags": true,
+      "focus": "vulnerability_analysis"
+    },
+    "quick_survey": {
+      "format": "summary",
+      "include_vulnerabilities": false,
+      "include_manifest": false,
+      "repositories_limit": "10-20"
+    }
+  },
+  "performance_considerations": {
+    "batch_size": "5 repositories processed concurrently",
+    "rate_limiting": "Respects Docker Hub API limits",
+    "timeout_handling": "Graceful failure with partial results",
+    "memory_usage": "Optimized for large batch operations"
+  }
+}

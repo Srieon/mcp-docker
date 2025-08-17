@@ -77,6 +77,7 @@ import { getStatsTool } from './get-stats.js';
 import { getVulnerabilitiesTool } from './get-vulnerabilities.js';
 import { getImageHistoryTool } from './get-image-history.js';
 import { estimatePullSizeTool } from './estimate-pull-size.js';
+import { batchImageDetailsTool } from './batch-image-details.js';
 
 // Register required tools
 toolRegistry.register(searchImagesTool);
@@ -92,3 +93,4 @@ toolRegistry.register(getStatsTool);
 toolRegistry.register(getVulnerabilitiesTool);
 toolRegistry.register(getImageHistoryTool);
 toolRegistry.register(estimatePullSizeTool);
+toolRegistry.register(batchImageDetailsTool);

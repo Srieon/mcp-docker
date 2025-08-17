@@ -36,7 +36,7 @@ A comprehensive Model Context Protocol (MCP) server that provides seamless integ
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd dockerhub-mcp-server
+   cd mcp-docker
    ```
 
 2. **Install dependencies**
@@ -125,6 +125,7 @@ See [SETUP.md](docs/SETUP.md) for detailed authentication configuration.
 | `docker_get_vulnerabilities` | Fetch security vulnerability scan results |
 | `docker_get_image_history` | Get detailed build history and timeline |
 | `docker_estimate_pull_size` | Calculate estimated download size for pulls |
+| `docker_batch_image_details` | Efficiently fetch details for multiple repositories in parallel |
 
 ## 📖 Usage Examples
 
@@ -181,6 +182,19 @@ See [SETUP.md](docs/SETUP.md) for detailed authentication configuration.
   "arguments": {
     "repository": "library/ubuntu",
     "tag": "latest"
+  }
+}
+```
+
+### Batch Analysis
+```json
+{
+  "tool": "docker_batch_image_details",
+  "arguments": {
+    "repositories": ["library/nginx", "library/node", "library/python"],
+    "include_tags": true,
+    "include_vulnerabilities": true,
+    "format": "comparison"
   }
 }
 ```
