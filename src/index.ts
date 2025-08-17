@@ -1,6 +1,14 @@
 #!/usr/bin/env node
 
 /**
+ * Copyright (c) 2025 Docker Hub MCP Server Contributors
+ * SPDX-License-Identifier: MIT
+ * 
+ * This file is part of the Docker Hub MCP Server project.
+ * See LICENSE file in the project root for full license information.
+ */
+
+/**
  * Docker Hub MCP Server Entry Point
  * 
  * This is a Model Context Protocol (MCP) server that provides comprehensive

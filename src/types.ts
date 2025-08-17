@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2025 Docker Hub MCP Server Contributors
+ * SPDX-License-Identifier: MIT
+ * 
+ * This file is part of the Docker Hub MCP Server project.
+ * See LICENSE file in the project root for full license information.
+ */
+
 import { z } from 'zod';
 
 // Configuration schemas

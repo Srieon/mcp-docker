@@ -1,0 +1,92 @@
+Docker Hub MCP Server
+Copyright (c) 2025 Docker Hub MCP Server Contributors
+
+This software contains code derived from or inspired by the following projects:
+
+================================================================================
+
+Model Context Protocol SDK
+Copyright (c) 2024 Anthropic
+Licensed under the MIT License
+https://github.com/modelcontextprotocol/sdk
+
+================================================================================
+
+Axios HTTP Client  
+Copyright (c) 2014-present Matt Zabriskie & Collaborators
+Licensed under the MIT License
+https://github.com/axios/axios
+
+================================================================================
+
+Express Web Framework
+Copyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>
+Copyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>
+Copyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>
+Licensed under the MIT License
+https://github.com/expressjs/express
+
+================================================================================
+
+CORS Middleware
+Copyright (c) 2013 Troy Goode <troygoode@gmail.com>
+Licensed under the MIT License
+https://github.com/expressjs/cors
+
+================================================================================
+
+Zod Schema Validation
+Copyright (c) 2020 Colin McDonnell
+Licensed under the MIT License
+https://github.com/colinhacks/zod
+
+================================================================================
+
+Node Cache
+Copyright (c) 2012 mpneuried
+Licensed under the MIT License
+https://github.com/node-cache/node-cache
+
+================================================================================
+
+Dotenv Configuration Loader
+Copyright (c) 2015 Scott Motte
+Licensed under the BSD 2-Clause License
+https://github.com/motdotla/dotenv
+
+================================================================================
+
+TypeScript Runtime (tsx)
+Copyright (c) 2023 Hiroki Osame
+Licensed under the MIT License
+https://github.com/privatenumber/tsx
+
+================================================================================
+
+ACKNOWLEDGMENTS
+
+This project builds upon the excellent work of the open source community.
+We are grateful to all the contributors and maintainers of the dependencies
+that make this MCP server possible.
+
+Special thanks to:
+- The Model Context Protocol specification contributors
+- The Docker Hub API documentation team
+- The TypeScript and Node.js communities
+- All beta testers and early adopters
+
+================================================================================
+
+THIRD-PARTY LICENSES
+
+All third-party software included in this distribution retains its original
+copyright and license. Users of this software must comply with the licenses
+of all included third-party components.
+
+For the most up-to-date license information, please refer to the individual
+packages in node_modules/ or their respective project repositories.
+
+================================================================================
+
+Docker Hub is a trademark of Docker, Inc. This project is not affiliated with
+or endorsed by Docker, Inc.
