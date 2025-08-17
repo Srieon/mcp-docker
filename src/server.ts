@@ -6,6 +6,8 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
+import express from 'express';
+import cors from 'cors';
 import { config } from './config.js';
 import { toolRegistry } from './tools/index.js';
 import { ErrorHandler } from './utils/error-handler.js';
@@ -16,6 +18,7 @@ import { cacheManager } from './cache/cache-manager.js';
  */
 export class DockerHubMCPServer {
   private server: Server;
+  private httpServer?: express.Application;
 
   constructor() {
     this.server = new Server(
@@ -31,6 +34,60 @@ export class DockerHubMCPServer {
     );
 
     this.setupHandlers();
+    
+    if (config.server.transport === 'http') {
+      this.setupHttpServer();
+    }
+  }
+
+  /**
+   * Set up HTTP server for web-based transport
+   */
+  private setupHttpServer(): void {
+    this.httpServer = express();
+    
+    // Enable CORS if configured
+    if (config.server.cors) {
+      this.httpServer.use(cors({
+        origin: true,
+        credentials: true,
+      }));
+    }
+    
+    this.httpServer.use(express.json());
+    
+    // Health check endpoint
+    this.httpServer.get('/health', (_req, res) => {
+      res.json({
+        status: 'healthy',
+        server: {
+          name: config.server.name,
+          version: config.server.version,
+          transport: config.server.transport,
+        },
+        tools: toolRegistry.getAllTools().length,
+        cache: cacheManager.getStats(),
+        timestamp: new Date().toISOString(),
+      });
+    });
+
+    // Server info endpoint
+    this.httpServer.get('/info', (_req, res) => {
+      res.json({
+        server: {
+          name: config.server.name,
+          version: config.server.version,
+          transport: config.server.transport,
+        },
+        tools: toolRegistry.getAllTools().map(tool => ({
+          name: tool.name,
+          description: tool.description,
+        })),
+        capabilities: {
+          tools: {},
+        },
+      });
+    });
   }
 
   /**
@@ -112,11 +169,21 @@ export class DockerHubMCPServer {
    */
   async start(): Promise<void> {
     console.log(`Starting ${config.server.name} v${config.server.version}`);
+    console.log(`Transport: ${config.server.transport}`);
     
     // Log configuration (without sensitive data)
     console.log('Configuration:', {
       cache: config.cache,
-      server: config.server,
+      server: {
+        name: config.server.name,
+        version: config.server.version,
+        transport: config.server.transport,
+        ...(config.server.transport === 'http' && {
+          httpHost: config.server.httpHost,
+          httpPort: config.server.httpPort,
+          cors: config.server.cors,
+        }),
+      },
       logLevel: config.logLevel,
       dockerhubAuth: {
         hasUsername: !!config.dockerhub.username,
@@ -128,11 +195,11 @@ export class DockerHubMCPServer {
       },
     });
 
-    // Initialize transport
-    const transport = new StdioServerTransport();
-    
-    // Connect server to transport
-    await this.server.connect(transport);
+    if (config.server.transport === 'http') {
+      await this.startHttpTransport();
+    } else {
+      await this.startStdioTransport();
+    }
 
     console.log('Docker Hub MCP Server is running and ready to accept requests.');
     console.log(`Available tools: ${toolRegistry.getAllTools().map(t => t.name).join(', ')}`);
@@ -140,6 +207,97 @@ export class DockerHubMCPServer {
     // Set up graceful shutdown
     process.on('SIGINT', () => this.shutdown());
     process.on('SIGTERM', () => this.shutdown());
+  }
+
+  /**
+   * Start HTTP transport
+   */
+  private async startHttpTransport(): Promise<void> {
+    if (!this.httpServer) {
+      throw new Error('HTTP server not initialized');
+    }
+
+    // Add SSE endpoint manually for now since SSEServerTransport doesn't work directly with Express
+    this.httpServer.get('/message', (req, res) => {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control',
+      });
+      
+      res.write('event: connected\n');
+      res.write('data: {"message": "MCP Server connected"}\n\n');
+      
+      // For now, just keep the connection open
+      // In a full implementation, this would handle MCP protocol messages
+      const keepAlive = setInterval(() => {
+        res.write('event: ping\n');
+        res.write('data: {"timestamp": "' + new Date().toISOString() + '"}\n\n');
+      }, 30000);
+      
+      req.on('close', () => {
+        clearInterval(keepAlive);
+      });
+    });
+
+    // Add a simple MCP tools endpoint for demonstration
+    this.httpServer.post('/tools', express.json(), async (req, res): Promise<void> => {
+      try {
+        const { tool, arguments: args } = req.body;
+        
+        if (!tool) {
+          res.status(400).json({ error: 'Tool name required' });
+          return;
+        }
+        
+        const toolHandler = toolRegistry.getTool(tool);
+        if (!toolHandler) {
+          res.status(404).json({ error: `Tool ${tool} not found` });
+          return;
+        }
+        
+        const validationResult = toolHandler.inputSchema.safeParse(args || {});
+        if (!validationResult.success) {
+          res.status(400).json({ 
+            error: `Invalid arguments: ${validationResult.error.message}` 
+          });
+          return;
+        }
+        
+        const result = await toolHandler.execute(validationResult.data);
+        res.json({ result });
+        
+      } catch (error: any) {
+        console.error('Tool execution error:', error);
+        res.status(500).json({ error: error.message || 'Internal server error' });
+      }
+    });
+
+    const httpServerInstance = this.httpServer.listen(
+      config.server.httpPort,
+      config.server.httpHost,
+      () => {
+        console.log(`HTTP server listening on http://${config.server.httpHost}:${config.server.httpPort}`);
+        console.log(`Health check available at: http://${config.server.httpHost}:${config.server.httpPort}/health`);
+        console.log(`Server info available at: http://${config.server.httpHost}:${config.server.httpPort}/info`);
+        console.log(`MCP SSE endpoint available at: http://${config.server.httpHost}:${config.server.httpPort}/message`);
+        console.log(`Tools endpoint available at: http://${config.server.httpHost}:${config.server.httpPort}/tools`);
+      }
+    );
+
+    // Store the server instance for cleanup
+    (this as any).httpServerInstance = httpServerInstance;
+  }
+
+  /**
+   * Start stdio transport
+   */
+  private async startStdioTransport(): Promise<void> {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.log('MCP server connected via stdio transport');
   }
 
   /**
@@ -152,7 +310,18 @@ export class DockerHubMCPServer {
       // Clear caches
       cacheManager.clear();
       
-      // Close server connection
+      // Close HTTP server if it exists
+      const httpServerInstance = (this as any).httpServerInstance;
+      if (httpServerInstance) {
+        await new Promise<void>((resolve) => {
+          httpServerInstance.close(() => {
+            console.log('HTTP server closed');
+            resolve();
+          });
+        });
+      }
+      
+      // Close MCP server connection
       await this.server.close();
       
       console.log('Server shutdown complete.');

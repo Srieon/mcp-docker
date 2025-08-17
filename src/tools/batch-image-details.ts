@@ -2,6 +2,7 @@ import { MCPTool } from './index.js';
 import { z } from 'zod';
 import { dockerHubClient } from '../clients/dockerhub.js';
 import { ErrorHandler } from '../utils/error-handler.js';
+import { ExportFormatter } from '../utils/export-formatter.js';
 
 /**
  * Batch Image Details Tool - Fetch details for multiple images efficiently
@@ -15,6 +16,7 @@ export const BatchImageDetailsArgsSchema = z.object({
   include_vulnerabilities: z.boolean().default(false).describe('Include vulnerability scan results'),
   tag_limit: z.number().min(1).max(10).default(5).describe('Number of tags to fetch per repository'),
   format: z.enum(['detailed', 'summary', 'comparison']).default('summary').describe('Output format'),
+  export_format: z.enum(['json', 'csv', 'dependency-tree']).default('json').describe('Export format for results'),
 });
 
 export type BatchImageDetailsArgs = z.infer<typeof BatchImageDetailsArgsSchema>;
@@ -25,14 +27,14 @@ export const batchImageDetailsTool: MCPTool<BatchImageDetailsArgs> = {
   inputSchema: BatchImageDetailsArgsSchema,
   
   async execute(args: BatchImageDetailsArgs) {
-    const { repositories, include_tags, include_manifest, include_vulnerabilities, tag_limit, format } = args;
+    const { repositories, include_tags, include_manifest, include_vulnerabilities, tag_limit, format, export_format } = args;
 
     console.log(`Processing batch request for ${repositories.length} repositories...`);
     
     try {
       // Process repositories in parallel with controlled concurrency
       const batchSize = 5; // Process 5 repositories at a time to avoid rate limits
-      const results = [];
+      const results: any[] = [];
       
       for (let i = 0; i < repositories.length; i += batchSize) {
         const batch = repositories.slice(i, i + batchSize);
@@ -66,18 +68,50 @@ export const batchImageDetailsTool: MCPTool<BatchImageDetailsArgs> = {
       // Format results based on requested format
       const formattedResults = formatBatchResults(results, format);
       
-      return {
+      const responseData = {
         batch_summary: {
           total_requested: repositories.length,
           successful: results.filter(r => r.success !== false).length,
           failed: results.filter(r => r.success === false).length,
           processing_time: `${Date.now()}ms`, // This would be calculated properly in real implementation
           format: format,
+          export_format: export_format,
         },
         results: formattedResults,
         aggregated_insights: generateAggregatedInsights(results.filter(r => r.success !== false)),
         recommendations: generateBatchRecommendations(results.filter(r => r.success !== false)),
       };
+
+      // Apply export formatting if requested
+      if (export_format === 'csv') {
+        return {
+          ...responseData,
+          exported_data: ExportFormatter.batchResultsToCSV(results),
+          export_info: {
+            format: 'csv',
+            description: 'Comma-separated values format suitable for spreadsheet applications',
+            usage: 'Save the exported_data content to a .csv file',
+          },
+        };
+      } else if (export_format === 'dependency-tree') {
+        const dependencyTrees = ExportFormatter.batchToDependencyForest(results);
+        return {
+          ...responseData,
+          exported_data: dependencyTrees.map(tree => ({
+            repository: tree.name,
+            tree_string: ExportFormatter.dependencyTreeToString(tree),
+            tree_json: tree,
+          })),
+          export_info: {
+            format: 'dependency-tree',
+            description: 'Hierarchical view of image dependencies and structure',
+            usage: 'Use tree_string for text visualization or tree_json for programmatic access',
+          },
+        };
+      }
+
+      // Default JSON format
+      return responseData;
       
     } catch (error) {
       throw ErrorHandler.handleError(error);

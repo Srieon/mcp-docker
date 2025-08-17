@@ -21,14 +21,18 @@ export function loadConfig(): Config {
       username: process.env.PRIVATE_REGISTRY_USERNAME,
       password: process.env.PRIVATE_REGISTRY_PASSWORD,
     } : undefined,
-    cache: {
-      ttlSeconds: parseInt(process.env.CACHE_TTL_SECONDS || '300', 10),
-      maxSize: parseInt(process.env.MAX_CACHE_SIZE || '1000', 10),
-    },
-    server: {
-      name: process.env.MCP_SERVER_NAME || 'dockerhub-mcp-server',
-      version: process.env.MCP_SERVER_VERSION || '1.0.0',
-    },
+      cache: {
+    ttlSeconds: parseInt(process.env.CACHE_TTL_SECONDS || '300', 10),
+    maxSize: parseInt(process.env.MAX_CACHE_SIZE || '1000', 10),
+  },
+  server: {
+    name: process.env.MCP_SERVER_NAME || 'dockerhub-mcp-server',
+    version: process.env.MCP_SERVER_VERSION || '1.0.0',
+    transport: (process.env.MCP_TRANSPORT as 'stdio' | 'http') || 'stdio',
+    httpPort: parseInt(process.env.MCP_HTTP_PORT || '3000', 10),
+    httpHost: process.env.MCP_HTTP_HOST || 'localhost',
+    cors: process.env.MCP_CORS !== 'false',
+  },
     logLevel: (process.env.LOG_LEVEL as 'debug' | 'info' | 'warn' | 'error') || 'info',
   };
 

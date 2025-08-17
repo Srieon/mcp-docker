@@ -24,6 +24,10 @@ A comprehensive Model Context Protocol (MCP) server that provides seamless integ
 - **Smart Caching**: Intelligent caching system to minimize API calls and improve performance
 - **Authentication Support**: Secure credential management for both public and private registries
 - **MCP Standard Compliance**: Fully compatible with popular MCP clients (Claude Desktop, Cursor, Cline)
+- **Multi-Transport Support**: Both stdio (for MCP clients) and HTTP (for web access) transports
+- **Interactive Setup**: Configuration wizard for easy initial setup
+- **Export Capabilities**: Multiple export formats including CSV, SARIF, and dependency trees
+- **Enhanced Security**: CVE cross-referencing and comprehensive security policy validation
 
 ## 📦 Installation
 
@@ -44,10 +48,14 @@ A comprehensive Model Context Protocol (MCP) server that provides seamless integ
    npm install
    ```
 
-3. **Set up environment variables**
+3. **Set up configuration (Interactive Wizard)**
+   ```bash
+   npm run setup
+   ```
+   Or manually set up environment variables:
    ```bash
    cp env.example .env
-   # Edit .env with your Docker Hub credentials (optional for public images)
+   # Edit .env with your Docker Hub credentials and preferences
    ```
 
 4. **Build the project**
@@ -81,6 +89,12 @@ PRIVATE_REGISTRY_PASSWORD=your_private_password
 # Server Configuration
 MCP_SERVER_NAME=dockerhub-mcp-server
 MCP_SERVER_VERSION=1.0.0
+
+# Transport Configuration
+MCP_TRANSPORT=stdio  # 'stdio' for MCP clients, 'http' for web access
+MCP_HTTP_HOST=localhost  # Only needed for HTTP transport
+MCP_HTTP_PORT=3000  # Only needed for HTTP transport
+MCP_CORS=true  # Enable CORS for HTTP transport
 
 # Performance Tuning
 CACHE_TTL_SECONDS=300
@@ -126,6 +140,8 @@ See [SETUP.md](docs/SETUP.md) for detailed authentication configuration.
 | `docker_get_image_history` | Get detailed build history and timeline |
 | `docker_estimate_pull_size` | Calculate estimated download size for pulls |
 | `docker_batch_image_details` | Efficiently fetch details for multiple repositories in parallel |
+| `docker_export_data` | Export image data in various formats (CSV, dependency trees, SARIF) |
+| `docker_enhanced_vulnerability_analysis` | Advanced security analysis with CVE cross-referencing and policy validation |
 
 ## 📖 Usage Examples
 
@@ -194,7 +210,39 @@ See [SETUP.md](docs/SETUP.md) for detailed authentication configuration.
     "repositories": ["library/nginx", "library/node", "library/python"],
     "include_tags": true,
     "include_vulnerabilities": true,
-    "format": "comparison"
+    "format": "comparison",
+    "export_format": "csv"
+  }
+}
+```
+
+### Enhanced Security Analysis
+```json
+{
+  "tool": "docker_enhanced_vulnerability_analysis",
+  "arguments": {
+    "repository": "library/nginx",
+    "tag": "latest",
+    "severity_filter": ["critical", "high"],
+    "include_cve_details": true,
+    "security_policy": {
+      "max_age_days": 180,
+      "min_severity_threshold": "medium"
+    },
+    "export_format": "sarif"
+  }
+}
+```
+
+### Data Export
+```json
+{
+  "tool": "docker_export_data",
+  "arguments": {
+    "repository": "library/node",
+    "tag": "18-alpine",
+    "export_type": "dependency-tree",
+    "format": "tree-string"
   }
 }
 ```
@@ -284,6 +332,24 @@ The server is compatible with Cursor's MCP integration. See the [integration gui
 ### Cline
 
 Works seamlessly with Cline's MCP support. Refer to Cline's documentation for MCP server configuration.
+
+### HTTP Transport (Web Access)
+
+When using HTTP transport mode, the server provides web endpoints:
+
+```bash
+# Set HTTP transport in .env
+MCP_TRANSPORT=http
+MCP_HTTP_PORT=3000
+
+# Start server
+npm start
+
+# Access endpoints
+curl http://localhost:3000/health          # Health check
+curl http://localhost:3000/info            # Server information
+# MCP endpoint: http://localhost:3000/message
+```
 
 ## 🐳 Docker Support
 

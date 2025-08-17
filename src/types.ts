@@ -21,6 +21,10 @@ export const ConfigSchema = z.object({
   server: z.object({
     name: z.string().default('dockerhub-mcp-server'),
     version: z.string().default('1.0.0'),
+    transport: z.enum(['stdio', 'http']).default('stdio'),
+    httpPort: z.number().default(3000),
+    httpHost: z.string().default('localhost'),
+    cors: z.boolean().default(true),
   }),
   logLevel: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 });
